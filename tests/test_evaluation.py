@@ -45,7 +45,7 @@ def test_judge_scores_are_aggregated(indexed):
     assert row["answer"].startswith("fake answer")
     assert row["judge"]["reasoning"] == "fake"
     assert len(llm.judge_calls) == 3
-    assert llm.judge_calls[0][3] == examples[0].reference_answer
+    assert {call[3] for call in llm.judge_calls} == {ex.reference_answer for ex in examples}
 
 
 def test_judge_failures_are_recorded_per_row(indexed):
