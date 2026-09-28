@@ -185,6 +185,15 @@ railway.json
 
 ## Design decisions & limitations
 
+- **No authentication or rate limiting**: the API (`/query`, `/evaluate`) is
+  wide open — anyone with the URL can spend the configured
+  `ANTHROPIC_API_KEY`'s credits (a single `/evaluate` run with the judge
+  enabled makes 28 Claude calls). If deploying publicly, set a spend limit on
+  the API key, avoid sharing the URL publicly, or put the service behind
+  auth.
+- **Embedding truncation**: `all-MiniLM-L6-v2` only embeds the first ~256
+  word pieces of each chunk, so long functions/windows are retrieved mostly
+  by their beginning (signature, docstring) rather than their full body.
 - **ChromaDB's built-in ONNX MiniLM** embedding function is used instead of
   the `sentence-transformers` package — same model, no `torch` dependency,
   and a smaller container image.

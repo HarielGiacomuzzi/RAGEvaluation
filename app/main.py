@@ -50,7 +50,7 @@ def create_app(chroma_dir: str | None = None, llm=None) -> FastAPI:
         accepted, skipped = [], []
         for upload in files:
             name = upload.filename or "unnamed"
-            data = await upload.read()
+            data = await upload.read(MAX_FILE_BYTES + 1)
             if len(data) > MAX_FILE_BYTES:
                 skipped.append({"path": name, "reason": "file larger than 1 MB"})
                 continue

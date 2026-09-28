@@ -107,7 +107,7 @@ $("#ask-form").addEventListener("submit", async (e) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, k: Number($("#query-k").value) }),
     });
-    reply.replaceChildren(r.answer);
+    reply.replaceChildren(r.answer || "(The model returned an empty answer.)");
     if (r.sources.length) reply.append(renderSources(r.sources));
   } catch (err) {
     reply.classList.add("error");

@@ -75,7 +75,11 @@ class ClaudeLLM:
                 fallbacks="default",
                 **extra,
             )
-        except (anthropic.AnthropicError, TypeError) as e:  # TypeError: SDK found no credentials
+        except anthropic.AnthropicError as e:
+            raise LLMError(f"LLM request failed: {e}") from e
+        except TypeError as e:  # SDK raises TypeError (not AnthropicError) when it finds no credentials
+            if "authentication" not in str(e):
+                raise
             raise LLMError(f"LLM request failed: {e}") from e
         if response.stop_reason == "refusal":
             raise LLMError("The model declined to answer this request.")

@@ -11,7 +11,8 @@ across restarts/deploys.
    (`"builder": "DOCKERFILE"`, `"dockerfilePath": "Dockerfile"`).
 2. Add a **volume** mounted at `/data`. The image sets `CHROMA_DIR=/data/chroma`,
    so indexed chunks persist there across deploys and restarts; without the
-   volume, every deploy starts with an empty index.
+   volume, every deploy starts with an empty index. The image also sets
+   `ANONYMIZED_TELEMETRY=False` to disable ChromaDB's telemetry.
 3. Set the **`ANTHROPIC_API_KEY`** environment variable (required for `/query`
    and judge scoring; the app starts and serves `/health` without it, but
    `/query` returns `502` until it's set).
@@ -23,6 +24,13 @@ across restarts/deploys.
 
 `PORT` is set by Railway automatically at runtime; the Dockerfile's `CMD`
 reads it (`--port ${PORT}`, defaulting to `8000` if unset).
+
+**Warning: no authentication or rate limiting.** `/query` and `/evaluate` are
+unauthenticated — anyone with the deployed URL can spend the configured
+`ANTHROPIC_API_KEY`'s credits (a full `/evaluate` run with the judge makes 28
+Claude calls, 4 concurrent). Set a spend limit on the API key, don't share
+the URL publicly, or put the service behind auth before deploying it
+publicly.
 
 **Live URL:** _pending — this app has not yet been deployed (no Railway
 credentials available in this environment). Add the deployed URL here once

@@ -72,3 +72,18 @@ def test_sdk_error_is_wrapped():
     err = anthropic.APIConnectionError(request=httpx.Request("POST", "https://api.anthropic.com"))
     with pytest.raises(LLMError, match="LLM request failed"):
         ClaudeLLM(client=FakeClient(error=err)).answer("q", [CHUNK])
+
+
+def test_missing_credentials_type_error_is_wrapped():
+    err = TypeError(
+        "Could not resolve authentication method. Expected one of api_key, "
+        "auth_token, or credentials to be set."
+    )
+    with pytest.raises(LLMError, match="LLM request failed"):
+        ClaudeLLM(client=FakeClient(error=err)).answer("q", [CHUNK])
+
+
+def test_unrelated_type_error_propagates():
+    err = TypeError("unexpected keyword argument 'x'")
+    with pytest.raises(TypeError):
+        ClaudeLLM(client=FakeClient(error=err)).answer("q", [CHUNK])
