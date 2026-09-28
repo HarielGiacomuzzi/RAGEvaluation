@@ -5,6 +5,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.evaluation import load_dataset, load_sample_repo, run_evaluation
 from app.llm import ClaudeLLM, LLMError
 from app.rag import RAGPipeline
 from app.store import SearchResult, VectorStore
@@ -16,6 +17,11 @@ class QueryRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     question: str = Field(min_length=1, max_length=2000)
     k: int = Field(5, ge=1, le=20)
+
+
+class EvaluateRequest(BaseModel):
+    k: int = Field(5, ge=1, le=20)
+    use_judge: bool = True
 
 
 def source_dict(result: SearchResult) -> dict:
@@ -31,6 +37,8 @@ def create_app(chroma_dir: str | None = None, llm=None) -> FastAPI:
     app = FastAPI(title="Codebase RAG", description="Index code, ask questions, evaluate retrieval and answers.")
     pipeline = RAGPipeline(VectorStore(chroma_dir, "code"), llm)
     app.state.pipeline = pipeline
+    eval_pipeline = RAGPipeline(VectorStore(chroma_dir, "eval"), llm)
+    app.state.eval_pipeline = eval_pipeline
 
     @app.post("/index/files")
     async def index_files(files: list[UploadFile] = File(...)):
@@ -60,5 +68,11 @@ def create_app(chroma_dir: str | None = None, llm=None) -> FastAPI:
     @app.get("/health")
     def health():
         return {"status": "ok", "indexed_chunks": pipeline.store.count()}
+
+    @app.post("/evaluate")
+    def evaluate(req: EvaluateRequest | None = None):
+        req = req or EvaluateRequest()
+        eval_pipeline.index_files(load_sample_repo())  # idempotent: re-indexing replaces chunks
+        return run_evaluation(eval_pipeline, load_dataset(), req.k, req.use_judge)
 
     return app
