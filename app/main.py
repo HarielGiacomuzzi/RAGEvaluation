@@ -1,14 +1,19 @@
 """FastAPI app factory: index and query endpoints. Run: uvicorn app.main:create_app --factory"""
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.evaluation import load_dataset, load_sample_repo, run_evaluation
 from app.llm import ClaudeLLM, LLMError
 from app.rag import RAGPipeline
 from app.store import SearchResult, VectorStore
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 MAX_FILE_BYTES = 1_000_000
 
@@ -74,5 +79,11 @@ def create_app(chroma_dir: str | None = None, llm=None) -> FastAPI:
         req = req or EvaluateRequest()
         eval_pipeline.index_files(load_sample_repo())  # idempotent: re-indexing replaces chunks
         return run_evaluation(eval_pipeline, load_dataset(), req.k, req.use_judge)
+
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def index():
+        return FileResponse(STATIC_DIR / "index.html")
 
     return app

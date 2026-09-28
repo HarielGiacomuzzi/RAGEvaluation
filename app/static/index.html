@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codebase RAG</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Codebase RAG</h1>
+    <span id="status" class="status" aria-live="polite">Loading…</span>
+  </header>
+
+  <main class="layout">
+    <section class="panel" id="indexing" aria-labelledby="indexing-title">
+      <h2 id="indexing-title">Indexing</h2>
+      <label class="dropzone" id="dropzone" for="file-input">
+        <strong>Drop code files here</strong>
+        <span>or click to choose files</span>
+        <input type="file" id="file-input" multiple hidden>
+      </label>
+      <div class="row">
+        <label class="button secondary" for="folder-input">Choose folder</label>
+        <input type="file" id="folder-input" webkitdirectory multiple hidden>
+        <button id="index-btn" class="button" disabled>Index files</button>
+      </div>
+      <ul id="file-list" class="file-list"></ul>
+      <p id="index-result" class="message" aria-live="polite"></p>
+    </section>
+
+    <section class="panel" id="querying" aria-labelledby="querying-title">
+      <h2 id="querying-title">Querying</h2>
+      <div id="chat" class="chat" aria-live="polite">
+        <p class="hint">Ask a question about the indexed code, e.g. "How are passwords hashed?"</p>
+      </div>
+      <form id="ask-form" class="ask">
+        <label class="sr-only" for="question">Question</label>
+        <textarea id="question" rows="2" placeholder="Ask about the code…" required></textarea>
+        <label class="k-select">Top K
+          <select id="query-k"><option>3</option><option selected>5</option><option>10</option></select>
+        </label>
+        <button class="button" type="submit">Ask</button>
+      </form>
+    </section>
+
+    <section class="panel wide" id="evaluation" aria-labelledby="evaluation-title">
+      <h2 id="evaluation-title">Evaluation</h2>
+      <p class="hint">Runs the 14-question ground-truth suite against the bundled sample codebase.</p>
+      <div class="row">
+        <label class="k-select">K
+          <select id="eval-k"><option>3</option><option selected>5</option><option>10</option></select>
+        </label>
+        <label class="check"><input type="checkbox" id="use-judge" checked> LLM-as-judge</label>
+        <button id="eval-btn" class="button">Run evaluation</button>
+      </div>
+      <p id="eval-status" class="message" aria-live="polite"></p>
+      <div id="metrics" class="metrics"></div>
+      <div class="table-wrap"><table id="eval-table" hidden>
+        <thead><tr><th>Question</th><th>P@K</th><th>R@K</th><th>RR</th><th>Judge</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
