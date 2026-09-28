@@ -38,7 +38,7 @@ def chunk_file(path: str, text: str) -> list[Chunk]:
     if language == "python":
         try:
             return _dedupe(_chunk_python(path, text))
-        except SyntaxError:
+        except (SyntaxError, ValueError, RecursionError):
             pass
     return _dedupe(_chunk_lines(path, text, language))
 
